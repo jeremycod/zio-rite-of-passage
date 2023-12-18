@@ -11,17 +11,17 @@ import com.rockthejvm.*
 
 import scala.collection.mutable
 
-object TapirDemo extends ZIOAppDefault{
+object TapirDemo extends ZIOAppDefault {
 
   val simplestEndpoint = endpoint
     .tag("simple")
     .name("simple")
     .description("simplest endpoint possible")
-  // ^^ for documentation
-  .get
-    .in("simple") // path
+    // ^^ for documentation
+    .get
+    .in("simple")           // path
     .out(plainBody[String]) // output
-    .serverLogicSuccess[Task](_=> ZIO.succeed("All good"))
+    .serverLogicSuccess[Task](_ => ZIO.succeed("All good"))
 
   val simpleServerProgram = Server.serve(
     ZioHttpInterpreter(
@@ -48,4 +48,3 @@ object TapirDemo extends ZIOAppDefault{
   )
 
 }
-

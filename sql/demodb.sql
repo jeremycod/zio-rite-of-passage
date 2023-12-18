@@ -1,7 +1,15 @@
-CREATE TABLE IF NOT EXISTS jobs (
-    id TEXT primary key,
-    title TEXT not null ,
-    url TEXT NOT NULL,
-    company TEXT NOT NULL,
-    relatedJob TEXT
+create table public.jobs
+(
+    id          text not null
+        primary key,
+    title       text not null,
+    url         text not null,
+    company     text not null,
+    related_job text
 );
+
+alter table public.jobs
+    owner to docker;
+
+create unique index if not exists jobs_pkey
+    on public.jobs (id);

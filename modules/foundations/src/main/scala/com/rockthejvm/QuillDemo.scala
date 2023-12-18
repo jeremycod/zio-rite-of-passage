@@ -8,16 +8,17 @@ import io.getquill.autoQuote
 import java.sql.SQLException
 import java.util.UUID
 
-object QuillDemo extends ZIOAppDefault{
+object QuillDemo extends ZIOAppDefault {
 
   private def createJob(parent: Job, id: Int): Job = {
     val uuid = UUID.randomUUID().toString
     Job(uuid, s"title:$id", s"url$id", s"company:$id", Some(parent.id))
   }
   private def createJobsBatch(startId: Int): Seq[Job] = {
-    val parent = Job(UUID.randomUUID().toString, s"title:$startId", s"url$startId", s"company:$startId", None)
-    (startId+1 to startId +5).foldLeft[Seq[Job]](Seq[Job](parent))((jobs, counter) => {
-      val last = jobs.last
+    val parent =
+      Job(UUID.randomUUID().toString, s"title:$startId", s"url$startId", s"company:$startId", None)
+    (startId + 1 to startId + 5).foldLeft[Seq[Job]](Seq[Job](parent))((jobs, counter) => {
+      val last   = jobs.last
       val newJob = createJob(last, counter)
       jobs :+ newJob
     })
@@ -28,11 +29,11 @@ object QuillDemo extends ZIOAppDefault{
     _ <- ZIO.foreachDiscard(1 to 100000) { n =>
       for {
         batch <- ZIO.succeed(createJobsBatch(n * 1000))
-        r <- repo.insertMany(batch)
+        r     <- repo.insertMany(batch)
       } yield r
     }
   } yield ()
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = program.provide (
+  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = program.provide(
     JobRepositoryLive.layer,
     Quill.Postgres.fromNamingStrategy(SnakeCase),
     Quill.DataSource.fromPrefix("mydbconf")
@@ -51,7 +52,7 @@ trait JobRepository {
 class JobRepositoryLive(quill: Quill.Postgres[SnakeCase]) extends JobRepository {
   import quill.*
 
-  inline given schema: SchemaMeta[Job] = schemaMeta[Job]("jobs")
+  inline given schema: SchemaMeta[Job]  = schemaMeta[Job]("jobs")
   inline given insMeta: InsertMeta[Job] = insertMeta[Job]()
   inline given updMeta: UpdateMeta[Job] = updateMeta[Job]()
   override def create(job: Job): Task[Job] =
