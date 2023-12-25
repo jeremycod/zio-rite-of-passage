@@ -8,6 +8,12 @@ import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 
 import com.rockthejvm.reviewboard.http.controllers.HealthController
 import com.rockthejvm.reviewboard.http.HttpApi
+import com.rockthejvm.reviewboard.services.CompanyService
+import com.rockthejvm.reviewboard.services.CompanyServiceLive
+import com.rockthejvm.reviewboard.repositories.CompanyRepositoryLive
+import com.rockthejvm.reviewboard.repositories.Repository
+import io.getquill.jdbczio.Quill
+import io.getquill.SnakeCase
 
 object Application extends ZIOAppDefault {
 
@@ -23,7 +29,11 @@ object Application extends ZIOAppDefault {
 
   override def run: ZIO[Any & (ZIOAppArgs & Scope), Any, Any] =
     serverProgram.provide(
-      Server.default
+      Server.default,
+      CompanyServiceLive.layer,
+      CompanyRepositoryLive.layer,
+      // other requirements
+      Repository.dataLayer
     )
 
 }

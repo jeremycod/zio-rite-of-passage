@@ -46,3 +46,7 @@ project/metals.sbt
 project/.bloop/*
 project/project/metals.sbt
 project/project/.bloop/bloop.settings.json
+/modules/server/src/test/scala/com/rockthejvm/reviewboard/repositories/.bsp/
+/modules/server/src/test/scala/com/rockthejvm/reviewboard/repositories/project/target/
+/modules/server/src/test/scala/com/rockthejvm/reviewboard/repositories/target/
+/project/project/.bloop/zio-rite-of-passage-build-build.json
