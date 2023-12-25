@@ -11,9 +11,19 @@ import javax.sql.DataSource
 import io.getquill.autoQuote
 import java.sql.SQLException
 
-object CompanyRepositorySpec extends ZIOSpecDefault {
+object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
 
   private val rtjvm = Company(1L, "rock-the-jvm", "Rock the JVM", "rockthejvm.com")
+
+  private def genString() =
+    scala.util.Random.alphanumeric.take(8).mkString
+  private def genCompany(): Company =
+    Company(
+      id = -1L,
+      slug = genString(),
+      name = genString(),
+      url = genString()
+    )
   override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("CompanyRepositorySpec")(
       test("create a company") {
@@ -34,40 +44,53 @@ object CompanyRepositorySpec extends ZIOSpecDefault {
           err     <- repo.create(rtjvm).flip
         } yield err
         program.assert(_.isInstanceOf[SQLException])
+      },
+      test("get by id and slug") {
+        val program = for {
+          repo          <- ZIO.service[CompanyRepository]
+          company       <- repo.create(rtjvm)
+          fetchedById   <- repo.getById(company.id)
+          fetchedBySlug <- repo.getBySlug(company.slug)
+        } yield (company, fetchedById, fetchedBySlug)
+        program.assert { case (company, fetchedById, fetchedBySlug) =>
+          fetchedById.contains(company) && fetchedBySlug.contains(company)
+        }
+      },
+      test("update record") {
+        val program = for {
+          repo        <- ZIO.service[CompanyRepository]
+          company     <- repo.create(rtjvm)
+          updated     <- repo.update(company.id, _.copy(url = "blog.rockthejvm.com"))
+          fetchedById <- repo.getById(company.id)
+        } yield (updated, fetchedById)
+        program
+          .assert {
+            case (updated, fetchedById) => fetchedById.contains(updated)
+            case _                      => false
+          }
+      },
+      test("delete record") {
+        val program = for {
+          repo        <- ZIO.service[CompanyRepository]
+          company     <- repo.create(rtjvm)
+          _           <- repo.delete(company.id)
+          fetchedById <- repo.getById(company.id)
+        } yield (fetchedById)
+        program
+          .assert(_.isEmpty)
+      },
+      test("get all records") {
+        val program = for {
+          repo             <- ZIO.service[CompanyRepository]
+          companies        <- ZIO.collectAll((1 to 10).map(_ => repo.create(genCompany())))
+          companiesFetched <- repo.get
+
+        } yield (companies, companiesFetched)
+        program.assert { case (companies, companiesFetched) =>
+          companies.toSet == companiesFetched.toSet
+        }
       }
     ).provide(CompanyRepositoryLive.layer, dataSourceLayer, Repository.quillLayer, Scope.default)
-  }
-
-  def createContainer(): PostgreSQLContainer[Nothing] = {
-    val container: PostgreSQLContainer[Nothing] =
-      PostgreSQLContainer("postgres").withInitScript("sql/companies.sql")
-    container.start()
-    container
-  }
-
-  def closeContainer(
-      container: PostgreSQLContainer[
-        Nothing
-      ]
-  ) = container.stop()
-
-  def createDataSource(container: PostgreSQLContainer[Nothing]): DataSource = {
-    val dataSource = new PGSimpleDataSource()
-    dataSource.setUrl(container.getJdbcUrl())
-    dataSource.setUser(container.getUsername())
-    dataSource.setPassword(container.getPassword())
-    dataSource
-
-  }
-
-  val dataSourceLayer = ZLayer {
-    for {
-      container <- ZIO
-        .acquireRelease(
-          ZIO.attempt(createContainer())
-        )(cont => ZIO.attempt(cont.stop()).ignoreLogged)
-      dataSource <- ZIO.attempt(createDataSource(container))
-    } yield dataSource
   }
 
 }
