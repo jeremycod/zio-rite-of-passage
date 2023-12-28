@@ -12,6 +12,7 @@ import io.getquill.autoQuote
 import java.sql.SQLException
 
 object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
+  override val initScript: String = "sql/company.sql"
 
   private val rtjvm = Company(1L, "rock-the-jvm", "Rock the JVM", "rockthejvm.com")
 

@@ -9,9 +9,10 @@ import java.sql.SQLException
 import zio.*
 
 trait RepositorySpec {
+  val initScript: String
   def createContainer(): PostgreSQLContainer[Nothing] = {
     val container: PostgreSQLContainer[Nothing] =
-      PostgreSQLContainer("postgres").withInitScript("sql/companies.sql")
+      PostgreSQLContainer("postgres").withInitScript(initScript)
     container.start()
     container
   }
