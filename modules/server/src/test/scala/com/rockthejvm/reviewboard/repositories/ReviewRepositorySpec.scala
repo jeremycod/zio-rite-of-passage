@@ -101,7 +101,7 @@ object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec {
             review.salary == updated.salary &&
             review.benefits == updated.benefits &&
             review.wouldRecommend == updated.wouldRecommend &&
-            review.review == updated.review &&
+            review.review != updated.review &&
             review.created == updated.created &&
             review.updated != updated.updated
         )
